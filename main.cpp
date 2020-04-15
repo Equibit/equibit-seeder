@@ -264,7 +264,10 @@ public:
   }
 
   void run() {
-    dnsserver(&dns_opt);
+    int ret = dnsserver(&dns_opt);
+    if (ret) {
+      printf("DNS thread failed with error %d\n", ret);
+    }
   }
 };
 
@@ -380,19 +383,21 @@ extern "C" void* ThreadStats(void*) {
     if (first)
     {
       first = false;
-      printf("\n\n\n\x1b[3A");
+      //printf("\n\n\n\x1b[3A");
     }
     else
-      printf("\x1b[2K\x1b[u");
-    printf("\x1b[s");
+    {
+      //printf("\x1b[2K\x1b[u");
+    }
+    //printf("\x1b[s");
     uint64_t requests = 0;
     uint64_t queries = 0;
     for (unsigned int i=0; i<dnsThread.size(); i++) {
       requests += dnsThread[i]->dns_opt.nRequests;
       queries += dnsThread[i]->dbQueries;
     }
-    printf("%s %i/%i available (%i tried in %is, %i new, %i active), %i banned; %llu DNS requests, %llu db queries", c, stats.nGood, stats.nAvail, stats.nTracked, stats.nAge, stats.nNew, stats.nAvail - stats.nTracked - stats.nNew, stats.nBanned, (unsigned long long)requests, (unsigned long long)queries);
-    Sleep(1000);
+    printf("%s %i/%i available (%i tried in %is, %i new, %i active), %i banned; %llu DNS requests, %llu db queries\n", c, stats.nGood, stats.nAvail, stats.nTracked, stats.nAge, stats.nNew, stats.nAvail - stats.nTracked - stats.nNew, stats.nBanned, (unsigned long long)requests, (unsigned long long)queries);
+    Sleep(10000);
   } while(1);
   return nullptr;
 }
@@ -484,15 +489,15 @@ int main(int argc, char **argv) {
   }
   pthread_t threadDns, threadSeed, threadDump, threadStats;
   if (fDNS) {
-    printf("Starting %i DNS threads for %s on %s (port %i)...", opts.nDnsThreads, opts.host, opts.ns, opts.nPort);
+    printf("Starting %i DNS threads for %s on %s (port %i)...\n", opts.nDnsThreads, opts.host, opts.ns, opts.nPort);
     dnsThread.clear();
     for (int i=0; i<opts.nDnsThreads; i++) {
       dnsThread.push_back(new CDnsThread(&opts, i));
       pthread_create(&threadDns, NULL, ThreadDNS, dnsThread[i]);
-      printf(".");
-      Sleep(20);
+      // printf(".");
+      Sleep(1000);
     }
-    printf("done\n");
+    printf("Done\n");
   }
   printf("Starting seeder...");
   pthread_create(&threadSeed, NULL, ThreadSeeder, NULL);

@@ -405,8 +405,10 @@ int dnsserver(dns_opt_t *opt) {
     si_me.sin6_family = AF_INET6;
     si_me.sin6_port = htons(opt->port);
     si_me.sin6_addr = in6addr_any;
-    if (bind(listenSocket, (struct sockaddr*)&si_me, sizeof(si_me))==-1)
+    if (bind(listenSocket, (struct sockaddr*)&si_me, sizeof(si_me)) < 0) {
+      perror("Binding failure");
       return -2;
+    }
   }
   
   unsigned char inbuf[BUFLEN], outbuf[BUFLEN];
@@ -425,6 +427,9 @@ int dnsserver(dns_opt_t *opt) {
     .msg_control = &cmsg,
     .msg_controllen = sizeof(cmsg),
   };
+
+  printf("Listening on %d\n", opt->port);
+
   for (; 1; ++(opt->nRequests))
   {
     ssize_t insize = recvmsg(listenSocket, &msg, 0);

@@ -778,6 +778,22 @@ std::string CNetAddr::ToString() const
     return ToStringIP();
 }
 
+std::string CNetAddr::ToSimpleString() const
+{
+    if (IsTor())
+        return EncodeBase32(&ip[6], 10) + ".onion";
+    if (IsI2P())
+        return EncodeBase32(&ip[6], 10) + ".oc.b32.i2p";
+    if (IsIPv4())
+        return strprintf("%u.%u.%u.%u", GetByte(3), GetByte(2), GetByte(1), GetByte(0));
+    else
+        return strprintf("%x:%x:%x:%x:%x:%x:%x:%x",
+                         GetByte(15) << 8 | GetByte(14), GetByte(13) << 8 | GetByte(12),
+                         GetByte(11) << 8 | GetByte(10), GetByte(9) << 8 | GetByte(8),
+                         GetByte(7) << 8 | GetByte(6), GetByte(5) << 8 | GetByte(4),
+                         GetByte(3) << 8 | GetByte(2), GetByte(1) << 8 | GetByte(0));
+}
+
 bool operator==(const CNetAddr& a, const CNetAddr& b)
 {
     return (memcmp(a.ip, b.ip, 16) == 0);
