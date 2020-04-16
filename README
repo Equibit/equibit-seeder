@@ -12,40 +12,45 @@ Features:
 * keeps statistics over (exponential) windows of 2 hours, 8 hours,
   1 day and 1 week, to base decisions on.
 * very low memory (a few tens of megabytes) and cpu requirements.
-* crawlers run in parallel (by default 24 threads simultaneously).
+* crawlers run in parallel (by default 96 threads simultaneously).
 
 REQUIREMENTS
 ------------
 
 $ sudo apt-get install build-essential libboost-all-dev libssl-dev
 
-USAGE
------
-
-Assuming you want to run a dns seed on dnsseed.example.com, you will
-need an authorative NS record in example.com's domain record, pointing
-to for example vps.example.com:
-
-$ dig -t NS dnsseed.example.com
-
-;; ANSWER SECTION
-dnsseed.example.com.   86400    IN      NS     vps.example.com.
-
-On the system vps.example.com, you can now run dnsseed:
-
-./dnsseed -h dnsseed.example.com -n vps.example.com
-
-If you want the DNS server to report SOA records, please provide an
-e-mail address (with the @ part replaced by .) using -m.
 
 COMPILING
 ---------
+
 Compiling will require boost and ssl.  On debian systems, these are provided
 by `libboost-dev` and `libssl-dev` respectively.
 
 $ make
 
 This will produce the `dnsseed` binary.
+
+
+USAGE
+-----
+
+Choose a domain or subdomain that will be the hostname for the dns seed.
+For example: dnsseed.myequibit.org
+
+Create an A record in the DNS entries for this hostname with the address of 
+the machine or container that will be running the dns seeder service.
+
+On the machine or container, run dnsseed as follows:
+
+./dnsseed -h dnsseed.myequibit.org -n 1.2.3.4 -m noreply@myequibit.org
+
+Where:
+-h: The DNS name that the DNS server will respond to. Should match the
+    hostname set up to point to the seeder.
+    
+-n: The IP address of the DNS server
+
+-m: The email address that the seeder will use to report SOA records.
 
 
 RUNNING AS NON-ROOT
@@ -65,5 +70,23 @@ the -p 5353 option.
 DISABLING EXISTING DNS SERVERS ON UBUNTU
 ----------------------------------------
 
-https://medium.com/@niktrix/getting-rid-of-systemd-resolved-consuming-port-53-605f0234f32f
+Ubuntu distributions already run a DNS server, so it will not be possible to run
+a secondary DNS server without stopping the existing DNS server. Use the following
+instructions to stop the built-in DNS server:
+
+1. Stop the resolved service
+`sudo systemctl stop systemd-resolved`
+
+2. Edit `/etc/systemd/resolved.conf` and make the following changes:
+
+2.1. Set an explicit external DNS server to use. For example:
+DNS=8.8.8.8
+
+2.2. Disable the stub listener:
+DNSStubListener=no
+
+3. Apply the symlink to the new resolved.conf file:
+`sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf`
+
+Sourced from https://medium.com/@niktrix/getting-rid-of-systemd-resolved-consuming-port-53-605f0234f32f
 
