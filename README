@@ -4,6 +4,8 @@ equibit-seeder
 Equibit-seeder is a crawler for the Equibit network, which exposes a list
 of reliable nodes via a built-in DNS server.
 
+See https://github.com/Equibit/equibit/wiki/EQB-DNS-Seeder for more information
+
 Features:
 * regularly revisits known nodes to check their availability
 * bans nodes after enough failures, or bad behaviour
